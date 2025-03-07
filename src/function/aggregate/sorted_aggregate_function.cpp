@@ -194,9 +194,9 @@ struct SortedAggregateState {
 			return;
 		}
 		// Move current in-memory data to disk storage
-		ordering->FlushToDisk();
+		ordering->Flush();
 		if (arguments) {
-			arguments->FlushToDisk();
+			arguments->Flush();
 		}
 	}
 
@@ -214,7 +214,9 @@ struct SortedAggregateState {
 
 		if (count > CHUNK_CAPACITY && !ordering) {
 			InitializeCollections(order_bind);
-			if (count > MEMORY_LIMIT) { // Prevent memory overload
+			const idx_t memory_threshold = 10000000;  
+			if (count > memory_threshold) {
+
 				SpillToDisk();
 			} else {
 				FlushChunks(order_bind);
@@ -401,12 +403,13 @@ struct SortedAggregateState {
 	}
 
 	void Finalize(const SortedAggregateBindData &order_bind, DataChunk &prefixed, LocalSortState &local_sort) {
-		if (ordering && ordering->Spilled()) {
-			ordering->LoadFromDisk();
-		}
-		if (arguments && arguments->Spilled()) {
-			arguments->LoadFromDisk();
-		}
+		
+	if (ordering && ordering->Count() > memory_threshold) { 
+    ordering->Flush(); 
+	}
+	if (arguments && arguments->Count() > memory_threshold) { 
+    arguments->Flush(); 
+	}
 		if (arguments) {
 			ColumnDataScanState sort_state;
 			ordering->InitializeScan(sort_state);
