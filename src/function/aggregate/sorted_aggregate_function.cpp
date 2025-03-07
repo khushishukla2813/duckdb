@@ -190,16 +190,15 @@ struct SortedAggregateState {
 	}
 
 	void SpillToDisk() {
-    if (!ordering) {
-        return;
-    }
-    // Move current in-memory data to disk storage
-    ordering->FlushToDisk();
-    if (arguments) {
-        arguments->FlushToDisk();
-    }
-}
-
+		if (!ordering) {
+			return;
+		}
+		// Move current in-memory data to disk storage
+		ordering->FlushToDisk();
+		if (arguments) {
+			arguments->FlushToDisk();
+		}
+	}
 
 	void Resize(const SortedAggregateBindData &order_bind, idx_t n) {
 		count = n;
@@ -213,18 +212,15 @@ struct SortedAggregateState {
 			FlushLinkedLists(order_bind);
 		}
 
-		
-
-		
-    if (count > CHUNK_CAPACITY && !ordering) {
-        InitializeCollections(order_bind);
-        if (count > MEMORY_LIMIT) {  // Prevent memory overload
-            SpillToDisk();
-        } else {
-            FlushChunks(order_bind);
-        }
-    }
-}
+		if (count > CHUNK_CAPACITY && !ordering) {
+			InitializeCollections(order_bind);
+			if (count > MEMORY_LIMIT) { // Prevent memory overload
+				SpillToDisk();
+			} else {
+				FlushChunks(order_bind);
+			}
+		}
+	}
 
 	static void LinkedAppend(const LinkedChunkFunctions &functions, ArenaAllocator &allocator, DataChunk &input,
 	                         LinkedLists &linked, SelectionVector &sel, idx_t nsel) {
@@ -405,12 +401,12 @@ struct SortedAggregateState {
 	}
 
 	void Finalize(const SortedAggregateBindData &order_bind, DataChunk &prefixed, LocalSortState &local_sort) {
-		    if (ordering && ordering->Spilled()) {
-        ordering->LoadFromDisk();
-    }
-    if (arguments && arguments->Spilled()) {
-        arguments->LoadFromDisk();
-    }
+		if (ordering && ordering->Spilled()) {
+			ordering->LoadFromDisk();
+		}
+		if (arguments && arguments->Spilled()) {
+			arguments->LoadFromDisk();
+		}
 		if (arguments) {
 			ColumnDataScanState sort_state;
 			ordering->InitializeScan(sort_state);
